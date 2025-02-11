@@ -22,7 +22,6 @@ def read_messages(client):
 
 def user_interface(client):
     global privKey
-    print(privKey)
     print("User Options: ")
     print("1) Send Message")
     print("2) Read Messages")
@@ -54,10 +53,10 @@ def login(client):
         raise ValueError("magic number incorrect")
     
     if r_id == 3:
-        user_interface(client)
         dbfile = open(username+'priv_pem', 'rb')
         privKey = pickle.load(dbfile)  
         dbfile.close()
+        user_interface(client)
     if r_id != 3:
         print("invalid credentials! - try again")
         login(client)

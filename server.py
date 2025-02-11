@@ -51,7 +51,7 @@ def client_thread(conn, addr):
                     key_data_base[user_data.username] = user_data.public_key
                 else:
                     response_packet = LoginStaus(4)
-                print(key_data_base)
+
                 conn.send(response_packet.content)
 
     print(f"[CONNECTION] Disconnected from {addr}")
