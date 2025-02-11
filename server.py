@@ -9,6 +9,7 @@ PORT = 9797
 
 #key:username value:password
 user_info_database = dict()
+key_data_base = dict()
 
 def client_thread(conn, addr):
     with conn:
@@ -27,8 +28,7 @@ def client_thread(conn, addr):
             #login attempt
             if r_id == 1:
                 info = []
-                info_len = rec_data[3]
-                for i in range(3, 3 + info_len):
+                for i in range(3, 3 + len(rec_data[3:])):
                     info.append(rec_data[i])
                 user_data = pickle.loads(bytearray(info))
                 if user_data.username in user_info_database.keys() and user_data.password == user_info_database[user_data.username]:
@@ -40,16 +40,18 @@ def client_thread(conn, addr):
             #signup attempt
             if r_id == 2:
                 info = []
-                info_len = rec_data[3]
-                for i in range(4, 4 + info_len):
+                #info_len = rec_data[3]
+                for i in range(3, 3+ len(rec_data[3:])):
                     info.append(rec_data[i])
-
+    
                 user_data = pickle.loads(bytes(info))
                 if user_data.username not in user_info_database.keys():
                     user_info_database[user_data.username] = user_data.password
                     response_packet = LoginStaus(3)
+                    key_data_base[user_data.username] = user_data.public_key
                 else:
                     response_packet = LoginStaus(4)
+                print(key_data_base)
                 conn.send(response_packet.content)
 
     print(f"[CONNECTION] Disconnected from {addr}")

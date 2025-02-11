@@ -1,11 +1,15 @@
 import socket
 import time
-
+import secrets
+from encryption import curve
 from user_info import UserInfo
 from packets import LoginPacket, SignUpPacket
+import pickle
 
 SERVER = "192.168.1.21"
 PORT = 9797
+
+privKey = None
 
 def send_message(client):
     #get key database
@@ -17,6 +21,8 @@ def read_messages(client):
     pass
 
 def user_interface(client):
+    global privKey
+    print(privKey)
     print("User Options: ")
     print("1) Send Message")
     print("2) Read Messages")
@@ -31,6 +37,7 @@ def user_interface(client):
             print("Invalid input - try again")
 
 def login(client):
+    global privKey
     username = input("enter user name: ")
     password = input("enter password: ")
 
@@ -48,15 +55,28 @@ def login(client):
     
     if r_id == 3:
         user_interface(client)
+        dbfile = open(username+'priv_pem', 'rb')
+        privKey = pickle.load(dbfile)  
+        dbfile.close()
     if r_id != 3:
         print("invalid credentials! - try again")
         login(client)
 
 def signup(client):
+    global privKey
     username = input("enter user name: ")
     password = input("enter password: ")
+    
+    # create key
+    privKey = secrets.randbelow(curve.field.n)
 
-    info = UserInfo(username, password)
+    dbfile = open(username+'priv_pem', 'ab')
+    pickle.dump(privKey, dbfile)                    
+    dbfile.close()
+
+    pubKey = privKey * curve.g
+
+    info = UserInfo(username, password, pubKey)
     signup_packet = SignUpPacket(info)
     client.send(signup_packet.content)
     client.settimeout(1)

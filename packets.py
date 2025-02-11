@@ -11,7 +11,6 @@ class LoginPacket(PacketHeader):
     def __init__(self, user_info):
         super().__init__(1)
         serialised_info = bytearray(pickle.dumps(user_info))
-        self.content.append(len(serialised_info))
         for byte in serialised_info:
             self.content.append(byte)
 
@@ -19,7 +18,6 @@ class SignUpPacket(PacketHeader):
     def __init__(self, user_info):
         super().__init__(2)
         serialised_info = bytearray(pickle.dumps(user_info))
-        self.content.append(len(serialised_info))
         for byte in serialised_info:
             self.content.append(byte)
 
@@ -34,8 +32,9 @@ class MessagePacket(PacketHeader):
         for byte in rec_name:
             self.content.append(byte)
             
-        self.content.append(len(message))
-        for byte in message:
+        serialised_info = bytearray(pickle.dumps(message))
+        self.content.append(len(serialised_info))
+        for byte in serialised_info:
             self.content.append(byte)
 
 class MessagesForUserPacket(PacketHeader):
