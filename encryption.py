@@ -40,22 +40,3 @@ def decrypt_ECC(encryptedMsg, privKey):
     secretKey = ecc_point_to_256_bit_key(sharedECCKey)
     plaintext = decrypt_AES_GCM(ciphertext, nonce, authTag, secretKey)
     return plaintext
-
-msg = b'Text to be encrypted by ECC public key and ' \
-      b'decrypted by its corresponding ECC private key'
-print("original msg:", msg)
-
-privKey = secrets.randbelow(curve.field.n)
-pubKey = privKey * curve.g
-
-encryptedMsg = encrypt_ECC(msg, pubKey)
-encryptedMsgObj = {
-    'ciphertext': binascii.hexlify(encryptedMsg[0]),
-    'nonce': binascii.hexlify(encryptedMsg[1]),
-    'authTag': binascii.hexlify(encryptedMsg[2]),
-    'ciphertextPubKey': hex(encryptedMsg[3].x) + hex(encryptedMsg[3].y % 2)[2:]
-}
-print("encrypted msg:", encryptedMsgObj)
-
-decryptedMsg = decrypt_ECC(encryptedMsg, privKey)
-print("decrypted msg:", decryptedMsg)

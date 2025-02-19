@@ -3,18 +3,47 @@ import time
 import secrets
 from encryption import curve
 from user_info import UserInfo
-from packets import LoginPacket, SignUpPacket
+from packets import LoginPacket, SignUpPacket, RequestUsersPacket
 import pickle
 
-SERVER = "192.168.1.21"
+SERVER = "192.168.1.8"
 PORT = 9797
 
 privKey = None
 
 def send_message(client):
+    key_req = RequestUsersPacket()
+    client.send(key_req.content)
+    client.settimeout(1)
+    rec_data = client.recv(4000)
+
+    #process packet
+    magic_no = rec_data[0]<<8 | rec_data[1]
+    r_id = rec_data[2]
+
+    if magic_no != 0xAE73:
+        raise ValueError("magic number incorrect")
+    if r_id != 13:
+        raise ValueError("wrong!")
+    
+    info = []
+    for i in range(3, 3 + len(rec_data[3:])):
+        info.append(rec_data[i])
+    user_name_database = pickle.loads(bytearray(info))
+
     #get key database
     #get users
-    pass
+    print("User List: ")
+    for item in user_name_database:
+        print(item)
+    print("User Options:")
+    print("1) Refresh User List")
+    print("2) Back")
+    
+    while True:
+        val = input(">")
+        if val == 1:
+            send_message(client)
 
 def read_messages(client):
     #get key database
@@ -29,9 +58,9 @@ def user_interface(client):
     while True:
         val = input(">")
         if val == '1':
-            login(client)
+            send_message(client)
         if val == '2':
-            signup(client)
+            read_messages(client)
         else:
             print("Invalid input - try again")
 
