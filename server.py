@@ -2,7 +2,7 @@ import socket
 import threading
 import pickle
 from user_info import UserInfo
-from packets import LoginStaus, UsersNamePacket
+from packets import LoginStaus, UsersNamePacket, KeyPacket
 
 SERVER = socket.gethostbyname(socket.gethostname())
 PORT = 9797
@@ -58,6 +58,16 @@ def client_thread(conn, addr):
             if r_id == 12:
                 user_key_packet = UsersNamePacket(list(key_data_base.keys()))
                 conn.send(user_key_packet.content)
+            
+            if r_id == 7:
+                info = []
+                for i in range(3, 3 + len(rec_data[3:])):
+                    info.append(rec_data[i])
+                user_name = pickle.loads(bytearray(info))
+                key_packet = KeyPacket(key_data_base[user_name])
+                conn.send(key_packet.content)
+
+
 
     print(f"[CONNECTION] Disconnected from {addr}")
 

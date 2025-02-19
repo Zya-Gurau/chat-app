@@ -63,11 +63,21 @@ class UsersNamePacket(PacketHeader):
 
 class GetMessagePacket(PacketHeader):
     def __init__(self):
-        super().__init__id(6)
+        super().__init__(6)
 
-class GetKeysPacket(PacketHeader):
-    def __init__(self):
-        super().__init__id(7)
+class GetKeyPacket(PacketHeader):
+    def __init__(self, name):
+        super().__init__(7)
+        serialised_info = bytearray(pickle.dumps(name))
+        for byte in serialised_info:
+            self.content.append(byte)
+
+class KeyPacket(PacketHeader):
+    def __init__(self, key):
+        super().__init__(14)
+        serialised_info = bytearray(pickle.dumps(key))
+        for byte in serialised_info:
+            self.content.append(byte)
 
 class RequestUsersPacket(PacketHeader):
     def __init__(self):

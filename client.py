@@ -1,17 +1,20 @@
 import socket
 import time
 import secrets
-from encryption import curve
+from encryption import curve, encrypt_ECC
 from user_info import UserInfo
-from packets import LoginPacket, SignUpPacket, RequestUsersPacket
+from packets import LoginPacket, SignUpPacket, RequestUsersPacket, MessagePacket, GetKeyPacket
 import pickle
 
 SERVER = "192.168.1.8"
 PORT = 9797
 
 privKey = None
+username = None
 
 def send_message(client):
+    global username
+    print(username)
     key_req = RequestUsersPacket()
     client.send(key_req.content)
     client.settimeout(1)
@@ -39,11 +42,40 @@ def send_message(client):
     print("User Options:")
     print("1) Refresh User List")
     print("2) Back")
+    print("To send a message, first type a username from the list\n then type your message.")
     
     while True:
         val = input(">")
         if val == 1:
             send_message(client)
+        if val == 2:
+            user_interface(client)
+        else:
+            if val in user_name_database:
+                #request public key 
+                pub_key_req = GetKeyPacket(val)
+                client.send(pub_key_req.content)
+                rec_data = client.recv(1024)
+
+                #process packet
+                magic_no = rec_data[0]<<8 | rec_data[1]
+                r_id = rec_data[2]
+
+                if magic_no != 0xAE73:
+                    raise ValueError("magic number incorrect")
+                if r_id != 14:
+                    raise ValueError("wrong!")
+                
+                info = []
+                for i in range(3, 3 + len(rec_data[3:])):
+                    info.append(rec_data[i])
+                pubkey = pickle.loads(bytearray(info))
+                msg = input(">")
+                if msg != None:
+                    #encrypt msg
+                    encrypted_msg = encrypt_ECC(msg, pubkey)
+                    msg_packet = MessagePacket(username, val, encrypted_msg)
+                    client.send(msg_packet)
 
 def read_messages(client):
     #get key database
@@ -92,6 +124,7 @@ def login(client):
 
 def signup(client):
     global privKey
+    global username
     username = input("enter user name: ")
     password = input("enter password: ")
     
